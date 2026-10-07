@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>昀昀盒子</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#f5f7fc;--card:#ffffff;--text:#1e293b;--text-sub:#64748b;--text-muted:#94a3b8;
+    --border:#e2e8f0;--border-soft:#eef2f7;--row-bg:#f8fafc;--item-bg:#ffffff;--item-border:#e9eef3;
+    --img-bg:#f8fafc;--status-bg:#f1f5f9;--upload-bg:#fafcff;--upload-border:#cbd5e1;
+    --blue:#2563eb;--green:#059669;--purple:#7c3aed;--dark-mark:#1e293b;
+    --transfer-bg:#fffbeb;--transfer-border:#fde68a;--transfer-text:#92400e;
+    --mini-bg:#ffffff;--mini-border:#fde68a;--mini-text:#92400e;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--text-sub:#94a3b8;--text-muted:#64748b;
+      --border:#334155;--border-soft:#334155;--row-bg:#0f172a;--item-bg:#1e293b;--item-border:#334155;
+      --img-bg:#0f172a;--status-bg:#0f172a;--upload-bg:#0f172a;--upload-border:#334155;
+      --blue:#60a5fa;--green:#34d399;--purple:#a78bfa;--dark-mark:#f1f5f9;
+      --transfer-bg:#2d2410;--transfer-border:#78350f;--transfer-text:#fcd34d;
+      --mini-bg:#1e293b;--mini-border:#78350f;--mini-text:#fcd34d;
+    }
+  }
+  body{background:var(--bg);font-family:system-ui,-apple-system,sans-serif;padding:12px;min-height:100vh;color:var(--text);transition:background .2s,color .2s}
+  .card{max-width:1100px;margin:0 auto;background:var(--card);border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,.06);padding:18px;transition:background .2s}
+  h1{font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .section-title{font-size:.82rem;font-weight:700;margin:12px 0 6px;display:flex;align-items:center;gap:6px}
+  .section-title .num{display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:.6rem;align-items:center;justify-content:center}
+  .btn{border:none;border-radius:40px;padding:12px;font-size:.82rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;width:100%;margin-top:8px;transition:.15s}
+  .btn:active{transform:scale(.98)}
+  .btn-secondary{background:var(--item-bg);color:var(--text);border:1px solid var(--border)}
+  .btn-secondary:disabled{opacity:.4;cursor:not-allowed}
+  .btn-green{background:var(--green);color:#fff}
+  .btn-green:disabled{background:var(--border);cursor:not-allowed;color:var(--text-muted)}
+
+  .upload-area{border:2px dashed var(--upload-border);border-radius:16px;padding:18px;text-align:center;background:var(--upload-bg);cursor:pointer;transition:.15s}
+  .upload-area:active{border-color:var(--blue);background:var(--row-bg)}
+  .upload-area input{display:none}
+  .upload-label{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+  .upload-label .icon{font-size:1.8rem}
+  .upload-label .main{font-weight:600;color:var(--blue);font-size:.9rem}
+  .upload-label .sub{font-size:.68rem;color:var(--text-muted)}
+
+  .transfer-box{background:var(--transfer-bg);border:1px solid var(--transfer-border);border-radius:16px;padding:12px;margin-top:8px}
+  .transfer-title{font-size:.75rem;font-weight:700;color:var(--transfer-text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .transfer-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+  .mini-upload{font-size:.7rem;padding:6px 10px;border-radius:20px;background:var(--mini-bg);border:1px solid var(--mini-border);color:var(--mini-text);cursor:pointer;font-weight:600;white-space:nowrap}
+  .mini-upload:active{opacity:.8}
+  .mini-upload input{display:none}
+  .mini-status{font-size:.65rem;color:var(--green);font-weight:600}
+  .mini-status.err{color:#dc2626}
+  .dark-thumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .dark-thumbs .dark-thumb{flex:0 0 auto;width:130px;background:var(--item-bg);border:2px solid var(--item-border);border-radius:12px;padding:6px;display:flex;flex-direction:column;align-items:center}
+  .dark-thumbs .dark-thumb img{width:100%;height:80px;object-fit:contain;background:var(--img-bg);border-radius:6px}
+  .dark-thumbs .dark-thumb .n{font-size:.55rem;margin-top:4px;word-break:break-all;text-align:center;color:var(--green);font-weight:700}
+
+  .group-block{margin-top:14px;background:var(--row-bg);border-radius:16px;padding:10px 12px 12px;border:1px solid var(--border-soft)}
+  .group-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .group-info{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .group-size{font-size:.72rem;font-weight:700;color:var(--blue);background:rgba(37,99,235,.12);padding:3px 12px;border-radius:20px}
+  .group-name{font-size:.72rem;font-weight:700;color:var(--green);background:rgba(5,150,105,.12);padding:3px 12px;border-radius:20px}
+  .group-count{font-size:.65rem;color:var(--text-muted)}
+  .group-select{font-size:.7rem;padding:5px 10px;border-radius:12px;border:1px solid var(--border);background:var(--item-bg);color:var(--text);font-weight:600;outline:none;cursor:pointer}
+  .group-select:focus{border-color:var(--blue)}
+
+  .group-inner{display:flex;gap:10px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+  .group-inner::-webkit-scrollbar{height:6px}
+  .group-inner::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .group-inner > .preview-item{flex:0 0 auto;width:200px}
+
+  .preview-item{background:var(--item-bg);border:2px solid var(--item-border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;transition:.15s;cursor:pointer;position:relative;-webkit-user-select:none;user-select:none}
+  .preview-item.selected{border-color:var(--blue);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+  .img-wrap{width:100%;height:120px;display:flex;align-items:center;justify-content:center;background:var(--img-bg);border-radius:8px;overflow:hidden;pointer-events:none}
+  .img-wrap img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+  .preview-dim{font-size:.6rem;color:var(--blue);font-weight:600;margin-top:5px;pointer-events:none}
+  .preview-orig{font-size:.55rem;color:var(--text-muted);text-align:center;margin-top:3px;word-break:break-all;line-height:1.3;pointer-events:none;max-width:100%}
+  .preview-item .badge{font-size:.6rem;padding:4px 8px;border-radius:20px;font-weight:700;margin-top:6px;text-align:center;word-break:break-all;max-width:100%;pointer-events:none}
+  .preview-item .badge.assigned{background:rgba(5,150,105,.15);color:var(--green)}
+  .preview-item .badge.none{background:rgba(220,38,38,.12);color:#dc2626}
+  .preview-item .dark-mark{position:absolute;top:5px;right:5px;font-size:.5rem;padding:2px 5px;border-radius:8px;background:var(--dark-mark);color:var(--card);font-weight:600;pointer-events:none}
+  .preview-item .gen-mark{position:absolute;top:5px;left:5px;font-size:.5rem;padding:2px 5px;border-radius:8px;background:var(--purple);color:#fff;font-weight:600;pointer-events:none}
+  .preview-item .trim-mark{position:absolute;bottom:5px;left:5px;font-size:.5rem;padding:2px 5px;border-radius:8px;background:#0891b2;color:#fff;font-weight:600;pointer-events:none}
+
+  .status{display:flex;justify-content:space-between;background:var(--status-bg);padding:8px 12px;border-radius:40px;font-size:.68rem;color:var(--text-sub);margin-top:10px}
+  .log{margin-top:12px;background:#0f172a;color:#e2e8f0;padding:10px;border-radius:12px;font-size:.65rem;font-family:monospace;max-height:100px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.5}
+  .log:empty{display:none}
+  .empty-tip{color:var(--text-muted);font-size:.78rem;text-align:center;padding:18px 0}
+  .swap-hint{font-size:.75rem;color:var(--blue);background:rgba(37,99,235,.1);border-radius:10px;padding:8px 12px;margin-top:8px;display:none;text-align:center;font-weight:700;position:sticky;top:6px;z-index:10;border:1px solid rgba(37,99,235,.25)}
+  .swap-hint.on{display:block}
+  .progress{margin-top:10px;font-size:.7rem;color:var(--blue);text-align:center;font-weight:600;display:none}
+  .progress.on{display:block}
+  .hint{font-size:.65rem;color:var(--text-muted);margin-top:6px;line-height:1.4}
+
+  .zipname-box{
+    display:flex;align-items:center;gap:8px;margin-top:10px;
+    background:var(--row-bg);border:1px solid var(--border-soft);border-radius:14px;padding:8px 12px;
+  }
+  .zipname-box .label{font-size:.7rem;font-weight:700;color:var(--text-sub);white-space:nowrap}
+  .zipname-box input{
+    flex:1;min-width:0;padding:6px 10px;border:1px solid var(--border);border-radius:10px;
+    background:var(--item-bg);color:var(--text);font-size:.75rem;font-weight:600;outline:none;
+  }
+  .zipname-box input:focus{border-color:var(--blue)}
+  .zipname-box .ext{font-size:.72rem;color:var(--text-muted);font-weight:600}
+
+  @media (max-width:420px){
+    .img-wrap{height:100px}
+    .group-inner > .preview-item{width:160px}
+    .preview-item .badge{font-size:.55rem}
+    .dark-thumbs .dark-thumb{width:110px}
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🔄 昀昀盒子</h1>
+
+  <div class="section-title"><span class="num">1</span> 上传（支持图片和 ZIP，上传后自动处理）</div>
+  <div class="upload-area" id="uploadArea">
+    <input type="file" id="fileInput" accept="image/*,.zip,application/zip" multiple>
+    <div class="upload-label">
+      <span class="icon">📂</span>
+      <span class="main">点击选择 或 拖拽 图片 / ZIP</span>
+      <span class="sub">支持 JPG/PNG/WebP/BMP，也支持 .zip 自动解压</span>
+    </div>
+  </div>
+
+  <div class="progress" id="progress">正在处理…</div>
+
+  <div class="section-title"><span class="num">2</span> 夜间模式生成（专属入口）</div>
+  <div class="transfer-box">
+    <div class="transfer-title">🌙 夜间模式 1 张 → 复制 2 张</div>
+    <div class="transfer-row">
+      <label class="mini-upload">
+        📂 选择夜间模式图片
+        <input type="file" id="transferDarkInput" accept="image/*">
+      </label>
+      <span class="mini-status" id="transferDarkStatus">未上传</span>
+    </div>
+    <div class="dark-thumbs" id="darkThumbs"></div>
+  </div>
+
+  <div class="section-title"><span class="num">3</span> 自动命名结果（可手动调整）</div>
+  <div id="previewArea">
+    <div class="empty-tip" id="emptyTip">还没有上传图片</div>
+  </div>
+
+  <div class="swap-hint" id="swapHint">已选中一张，请点击另一张来互换名字</div>
+
+  <div class="status">
+    <span id="counter">已上传 0 张</span>
+    <span id="assignInfo">已命名 0 张</span>
+  </div>
+
+  <div class="zipname-box">
+    <span class="label">📦 压缩包名</span>
+    <input type="text" id="zipNameInput" placeholder="输入压缩包名称" value="昀昀盒子">
+    <span class="ext">.zip</span>
+  </div>
+
+  <button class="btn btn-secondary" id="clearBtn" disabled>🗑️ 清空全部图片</button>
+  <button class="btn btn-green" id="downloadBtn" disabled>📦 打包下载重命名图片</button>
+
+  <div class="log" id="log"></div>
+  <div class="hint">💡 781×271 自动复制成 10 张，171×121 自动 2 张，夜间模式 2 张。其他相近尺寸并排一组。带透明底的图片会自动裁掉全透明边，输出保持 PNG 透明底。</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function(){
+  const fileInput = document.getElementById('fileInput');
+  const uploadArea = document.getElementById('uploadArea');
+  const previewArea = document.getElementById('previewArea');
+  const emptyTip = document.getElementById('emptyTip');
+  const counterEl = document.getElementById('counter');
+  const assignInfoEl = document.getElementById('assignInfo');
+  const clearBtn = document.getElementById('clearBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const logEl = document.getElementById('log');
+  const swapHint = document.getElementById('swapHint');
+  const progressEl = document.getElementById('progress');
+  const transferDarkInput = document.getElementById('transferDarkInput');
+  const transferDarkStatus = document.getElementById('transferDarkStatus');
+  const darkThumbsEl = document.getElementById('darkThumbs');
+  const zipNameInput = document.getElementById('zipNameInput');
+
+  const NAME_SCHEMES = {
+    'input_bg_pair': { label: 'input_bg ⇄ input_bg_Dark', names: ['input_bg', 'input_bg_Dark'] },
+    'tabbar_bg_pair': { label: 'tabbar_bg ⇄ tabbar_bg_Dark', names: ['tabbar_bg', 'tabbar_bg_Dark'] },
+    'topbar_bg_pair': { label: 'topbar_bg ⇄ topbar_bg_Dark', names: ['topbar_bg', 'topbar_bg_Dark'] },
+    'default_bg_pair': { label: 'default_bg ⇄ default_bg_Dark', names: ['default_bg', 'default_bg_Dark'] },
+    'chat_bg_pair': { label: 'chat_bg ⇄ chat_bg_Dark', names: ['chat_bg', 'chat_bg_Dark'] },
+    'transfer10': {
+      label: '转账 10 张（781×271）',
+      names: [
+        'c2creceivermsgnodebg_handled','c2creceivermsgnodebg',
+        'c2csendermsgnodebg','c2csendermsgnodebg_handled',
+        'ChatRoom_Bubble_HB_Overtime_Receiver','ChatRoom_Bubble_HB_Overtime_Sender',
+        'ChatRoom_Bubble_HB_Receiver_Handled','ChatRoom_Bubble_HB_Receiver',
+        'ChatRoom_Bubble_HB_Sender_Handled','ChatRoom_Bubble_HB_Sender'
+      ]
+    },
+    'bubble2': { label: '气泡 2 张（171×121）', names: ['ChatRoom_Bubble_Text_Sender_Green','ChatRoom_Bubble_Text_Receiver_White'] },
+    'night2': { label: '夜间 2 张', names: ['ChatRoom_Bubble_Text_Receiver_Dark_HL','ChatRoom_Bubble_Text_Receiver_Dark'] },
+    'none': { label: '不命名 / 手动', names: [] }
+  };
+
+  const SIZE_TO_SCHEME = [
+    { w: 781,  h: 271,  key: 'transfer10' },
+    { w: 171,  h: 121,  key: 'bubble2' },
+    { w: 1178, h: 241,  key: 'input_bg_pair' },
+    { w: 1178, h: 242,  key: 'input_bg_pair' },
+    { w: 1178, h: 254,  key: 'tabbar_bg_pair' },
+    { w: 1178, h: 256,  key: 'tabbar_bg_pair' },
+    { w: 1179, h: 292,  key: 'topbar_bg_pair' },
+    { w: 1179, h: 263,  key: 'topbar_bg_pair' },
+    { w: 1179, h: 2556, key: 'default_chat' }
+  ];
+
+  const TOLERANCE = 3;
+  const ALPHA_THRESHOLD = 1;
+  const MAX_SCAN = 400;        // 降采样扫描的最大边长
+  const TRIM_TIMEOUT = 3000;   // 单张裁剪超时 (ms)
+
+  let images = [];
+  let groups = [];
+  let selectedId = null;
+  let isProcessing = false;
+
+  function log(msg, isError=false){
+    const t = new Date().toLocaleTimeString('zh-CN',{hour12:false});
+    logEl.innerHTML += `[${t}] ${isError?'❌':'📌'} ${msg}\n`;
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function clearLog(){ logEl.innerHTML=''; }
+  function uid(){ return Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+  function normalizeExt(ext){
+    if(!ext) return '';
+    ext = ext.trim();
+    if(ext && !ext.startsWith('.')) ext = '.' + ext;
+    return ext;
+  }
+  function isDarkName(name){ return /_Dark$/i.test(name); }
+  function isImageFile(name){ return /\.(jpe?g|png|webp|bmp|gif|tiff?)$/i.test(name); }
+
+  function sortPairItems(items, schemeKey){
+    if(schemeKey === 'bubble2'){
+      const order = ['ChatRoom_Bubble_Text_Sender_Green','ChatRoom_Bubble_Text_Receiver_White'];
+      return [...items].sort((a,b)=>{
+        const ai = order.indexOf(a.assignedName);
+        const bi = order.indexOf(b.assignedName);
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      });
+    }
+    if(schemeKey === 'night2'){
+      const order = ['ChatRoom_Bubble_Text_Receiver_Dark_HL','ChatRoom_Bubble_Text_Receiver_Dark'];
+      return [...items].sort((a,b)=>{
+        const ai = order.indexOf(a.assignedName);
+        const bi = order.indexOf(b.assignedName);
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      });
+    }
+    return [...items].sort((a,b)=>{
+      const aName = a.assignedName || '';
+      const bName = b.assignedName || '';
+      const aDark = isDarkName(aName) ? 1 : 0;
+      const bDark = isDarkName(bName) ? 1 : 0;
+      if(aDark !== bDark) return aDark - bDark;
+      return aName.localeCompare(bName);
+    });
+  }
+
+  function getImageSize(file){
+    return new Promise((resolve,reject)=>{
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = ()=> resolve({width:img.naturalWidth,height:img.naturalHeight,url});
+      img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('加载失败')); };
+      img.src = url;
+    });
+  }
+
+  // ⭐⭐⭐ 自动去除透明底（降采样 + 超时 + 兜底）
+  // 返回 null 表示不处理（无透明边 / 全透明 / 出错 / 超时）
+  function trimTransparent(file, alphaThreshold = ALPHA_THRESHOLD, timeoutMs = TRIM_TIMEOUT){
+    return new Promise((resolve)=>{
+      let done = false;
+      let timer = null;
+      const finish = (val)=>{
+        if(done) return;
+        done = true;
+        if(timer) clearTimeout(timer);
+        resolve(val);
+      };
+      timer = setTimeout(()=>{
+        console.warn('trimTransparent 超时，跳过裁剪:', file.name);
+        finish(null);
+      }, timeoutMs);
+
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = ()=>{
+        try{
+          const w = img.naturalWidth, h = img.naturalHeight;
+          if(!w || !h){ URL.revokeObjectURL(url); finish(null); return; }
+
+          // 超大图直接跳过（防止极端情况）
+          if(Math.max(w, h) > 6000){ URL.revokeObjectURL(url); finish(null); return; }
+
+          // 降采样扫描
+          const scale = Math.min(1, MAX_SCAN / Math.max(w, h));
+          const sw = Math.max(1, Math.round(w * scale));
+          const sh = Math.max(1, Math.round(h * scale));
+
+          let data;
+          try{
+            const scanCanvas = document.createElement('canvas');
+            scanCanvas.width = sw; scanCanvas.height = sh;
+            const sctx = scanCanvas.getContext('2d', { willReadFrequently: true });
+            sctx.drawImage(img, 0, 0, sw, sh);
+            const imageData = sctx.getImageData(0, 0, sw, sh);
+            data = imageData.data;
+          }catch(e){
+            URL.revokeObjectURL(url);
+            finish(null);
+            return;
+          }
+
+          let minX = sw, minY = sh, maxX = -1, maxY = -1;
+          for(let y = 0; y < sh; y++){
+            const rowOffset = y * sw * 4;
+            for(let x = 0; x < sw; x++){
+              const a = data[rowOffset + x * 4 + 3];
+              if(a > alphaThreshold){
+                if(x < minX) minX = x;
+                if(x > maxX) maxX = x;
+                if(y < minY) minY = y;
+                if(y > maxY) maxY = y;
+              }
+            }
+          }
+
+          // 全透明 或 无透明边：不处理
+          if(maxX === -1 || (minX === 0 && minY === 0 && maxX === sw - 1 && maxY === sh - 1)){
+            URL.revokeObjectURL(url);
+            finish(null);
+            return;
+          }
+
+          // 映射回原图坐标 + 边界保险
+          const invScale = 1 / scale;
+          let rx = Math.floor(minX * invScale);
+          let ry = Math.floor(minY * invScale);
+          let rw = Math.ceil((maxX - minX + 1) * invScale);
+          let rh = Math.ceil((maxY - minY + 1) * invScale);
+          rx = Math.max(0, rx - 1);
+          ry = Math.max(0, ry - 1);
+          rw = Math.min(w - rx, rw + 2);
+          rh = Math.min(h - ry, rh + 2);
+
+          // 无实质变化：不处理
+          if(rx === 0 && ry === 0 && rw === w && rh === h){
+            URL.revokeObjectURL(url);
+            finish(null);
+            return;
+          }
+
+          // 原图裁剪（不再 getImageData，避免卡顿）
+          try{
+            const out = document.createElement('canvas');
+            out.width = rw; out.height = rh;
+            const octx = out.getContext('2d');
+            octx.drawImage(img, rx, ry, rw, rh, 0, 0, rw, rh);
+            out.toBlob((blob)=>{
+              URL.revokeObjectURL(url);
+              if(!blob){ finish(null); return; }
+              const baseName = file.name.replace(/\.[^.]+$/, '');
+              const newFile = new File([blob], baseName + '.png', { type: 'image/png' });
+              finish({
+                file: newFile,
+                originalWidth: w,
+                originalHeight: h,
+                width: rw,
+                height: rh,
+                cropped: true
+              });
+            }, 'image/png');
+          }catch(e){
+            URL.revokeObjectURL(url);
+            finish(null);
+          }
+        }catch(e){
+          try{ URL.revokeObjectURL(url); }catch(_){}
+          finish(null);
+        }
+      };
+      img.onerror = ()=>{ try{ URL.revokeObjectURL(url); }catch(_){} finish(null); };
+      img.src = url;
+    });
+  }
+
+  // ⭐ 批量裁剪：带进度回调 + 单张失败不影响
+  async function trimBatch(files, onProgress){
+    const result = [];
+    for(let i = 0; i < files.length; i++){
+      const f = files[i];
+      if(onProgress) onProgress(i + 1, files.length, f.name);
+      try{
+        const res = await trimTransparent(f);
+        if(res && res.cropped){
+          log(`✂️ ${f.name} 透明底裁剪：${res.originalWidth}×${res.originalHeight} → ${res.width}×${res.height} (PNG)`);
+          result.push({
+            file: res.file,
+            trimmed: true,
+            originalWidth: res.originalWidth,
+            originalHeight: res.originalHeight
+          });
+        }else{
+          result.push({ file: f, trimmed: false });
+        }
+      }catch(e){
+        result.push({ file: f, trimmed: false });
+      }
+      // 每张之间让出主线程
+      await new Promise(r=>setTimeout(r, 0));
+    }
+    return result;
+  }
+
+  function schemeKeyBySize(w, h){
+    for(const s of SIZE_TO_SCHEME){
+      if(Math.abs(w - s.w) <= TOLERANCE && Math.abs(h - s.h) <= TOLERANCE){
+        return s.key;
+      }
+    }
+    return 'none';
+  }
+
+  async function preprocessFiles(fileEntries){
+    const result = [];
+    for(const entry of fileEntries){
+      const file = entry.file || entry;
+      const trimmed = !!entry.trimmed;
+      const originalWidth = entry.originalWidth || 0;
+      const originalHeight = entry.originalHeight || 0;
+
+      try{
+        const {width, height} = await getImageSize(file);
+        const key = schemeKeyBySize(width, height);
+
+        if(key === 'transfer10'){
+          log(`  🔁 ${file.name} (${width}×${height}) → 复制成 10 张`);
+          const NAMES = NAME_SCHEMES.transfer10.names;
+          for(let i = 0; i < NAMES.length; i++){
+            const newFile = new File([file], NAMES[i] + '.png', { type: 'image/png' });
+            result.push({
+              file: newFile,
+              assignedName: NAMES[i],
+              assignedExt: '.png',
+              isGenerated: true,
+              trimmed: false
+            });
+          }
+          continue;
+        }
+
+        result.push({
+          file,
+          assignedName: null,
+          assignedExt: null,
+          isGenerated: false,
+          trimmed,
+          originalWidth,
+          originalHeight
+        });
+      }catch(e){
+        log(`处理失败: ${file.name}`, true);
+      }
+    }
+    return result;
+  }
+
+  function autoNameAll(){
+    const sizeMap = new Map();
+    images.forEach(img=>{
+      const key = `${img.width}x${img.height}`;
+      if(!sizeMap.has(key)) sizeMap.set(key, []);
+      sizeMap.get(key).push(img);
+    });
+
+    sizeMap.forEach(list=>{
+      const w = list[0].width, h = list[0].height;
+      const schemeKey = schemeKeyBySize(w, h);
+
+      if(schemeKey === 'default_chat'){
+        const names = ['default_bg','default_bg_Dark','chat_bg','chat_bg_Dark'];
+        const unassigned = list.filter(im=>!im.assignedName);
+        unassigned.forEach((img, idx)=>{
+          if(idx < names.length){
+            img.assignedName = names[idx];
+            img.assignedExt = '.png';
+          }
+        });
+        return;
+      }
+
+      if(schemeKey === 'bubble2'){
+        const names = NAME_SCHEMES.bubble2.names;
+        const unassigned = list.filter(im=>!im.assignedName);
+        unassigned.forEach((img, idx)=>{
+          if(idx < names.length){
+            img.assignedName = names[idx];
+            img.assignedExt = '.png';
+          }
+        });
+        return;
+      }
+
+      if(schemeKey === 'transfer10') return;
+
+      const scheme = NAME_SCHEMES[schemeKey];
+      if(!scheme || scheme.names.length === 0){
+        list.forEach(img=>{ if(!img.assignedName){ img.assignedName = null; img.assignedExt = null; } });
+        return;
+      }
+      const unassigned = list.filter(im=>!im.assignedName);
+      unassigned.forEach((img, idx)=>{
+        const name = scheme.names[idx % scheme.names.length];
+        img.assignedName = name;
+        img.assignedExt = '.png';
+      });
+    });
+  }
+
+  function buildDisplayGroups(){
+    groups = [];
+    const handled = new Set();
+
+    const bubbleGreen = images.find(im=>im.assignedName === 'ChatRoom_Bubble_Text_Sender_Green');
+    const bubbleWhite = images.find(im=>im.assignedName === 'ChatRoom_Bubble_Text_Receiver_White');
+    if(bubbleGreen || bubbleWhite){
+      const items = [];
+      if(bubbleGreen) items.push(bubbleGreen);
+      if(bubbleWhite) items.push(bubbleWhite);
+      groups.push({
+        id: uid(), w: 171, h: 121, schemeKey: 'bubble2',
+        groupLabel: '气泡 2 张',
+        items: sortPairItems(items, 'bubble2')
+      });
+      items.forEach(x=>handled.add(x.id));
+    }
+
+    const darkHL = images.find(im=>im.assignedName === 'ChatRoom_Bubble_Text_Receiver_Dark_HL');
+    const dark = images.find(im=>im.assignedName === 'ChatRoom_Bubble_Text_Receiver_Dark');
+    if(darkHL || dark){
+      const items = [];
+      if(darkHL) items.push(darkHL);
+      if(dark) items.push(dark);
+      groups.push({
+        id: uid(), w: 0, h: 0, schemeKey: 'night2',
+        groupLabel: '夜间 2 张',
+        items: sortPairItems(items, 'night2')
+      });
+      items.forEach(x=>handled.add(x.id));
+    }
+
+    const defaultItems = images.filter(im=>im.assignedName === 'default_bg' || im.assignedName === 'default_bg_Dark');
+    if(defaultItems.length > 0){
+      groups.push({
+        id: uid(), w: 1179, h: 2556, schemeKey: 'default_bg_pair',
+        groupLabel: 'default_bg ⇄ default_bg_Dark',
+        items: sortPairItems(defaultItems, 'default_bg_pair')
+      });
+      defaultItems.forEach(x=>handled.add(x.id));
+    }
+
+    const chatItems = images.filter(im=>im.assignedName === 'chat_bg' || im.assignedName === 'chat_bg_Dark');
+    if(chatItems.length > 0){
+      groups.push({
+        id: uid(), w: 1179, h: 2556, schemeKey: 'chat_bg_pair',
+        groupLabel: 'chat_bg ⇄ chat_bg_Dark',
+        items: sortPairItems(chatItems, 'chat_bg_pair')
+      });
+      chatItems.forEach(x=>handled.add(x.id));
+    }
+
+    const rest = images.filter(im=>!handled.has(im.id));
+    const sizeGroups = [];
+    const sorted = [...rest].sort((a,b)=> a.width*a.height - b.width*b.height);
+    sorted.forEach(img=>{
+      let found = null;
+      let bestDiff = Infinity;
+      for(const g of sizeGroups){
+        const dw = Math.abs(g.w - img.width);
+        const dh = Math.abs(g.h - img.height);
+        if(dw <= TOLERANCE && dh <= TOLERANCE){
+          const diff = dw + dh;
+          if(diff < bestDiff){ bestDiff = diff; found = g; }
+        }
+      }
+      if(found){
+        found.items.push(img);
+        const n = found.items.length;
+        found.w = Math.round((found.w*(n-1) + img.width)/n);
+        found.h = Math.round((found.h*(n-1) + img.height)/n);
+      } else {
+        sizeGroups.push({ w: img.width, h: img.height, items: [img] });
+      }
+    });
+
+    sizeGroups.forEach(sg=>{
+      const key = schemeKeyBySize(sg.w, sg.h);
+      groups.push({
+        id: uid(), w: sg.w, h: sg.h, schemeKey: key,
+        groupLabel: NAME_SCHEMES[key] ? NAME_SCHEMES[key].label : '未命名',
+        items: sortPairItems(sg.items, key)
+      });
+    });
+
+    groups.sort((a,b)=> {
+      if(a.schemeKey === 'bubble2') return -2;
+      if(a.schemeKey === 'night2') return -1;
+      if(b.schemeKey === 'bubble2') return 2;
+      if(b.schemeKey === 'night2') return 1;
+      return a.w - b.w || a.h - b.h;
+    });
+  }
+
+  function renderAll(){
+    previewArea.innerHTML = '';
+    if(groups.length === 0){
+      previewArea.innerHTML = '<div class="empty-tip">还没有上传图片</div>';
+      return;
+    }
+
+    groups.forEach((group)=>{
+      const block = document.createElement('div');
+      block.className = 'group-block';
+      block.dataset.groupId = group.id;
+
+      const head = document.createElement('div');
+      head.className = 'group-head';
+
+      const info = document.createElement('div');
+      info.className = 'group-info';
+      info.innerHTML = `
+        <span class="group-size">${group.w > 0 ? group.w + ' × ' + group.h : ''}</span>
+        <span class="group-name">${group.groupLabel || ''}</span>
+        <span class="group-count">${group.items.length} 张</span>
+      `;
+      head.appendChild(info);
+
+      const select = document.createElement('select');
+      select.className = 'group-select';
+      Object.keys(NAME_SCHEMES).forEach(key=>{
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = NAME_SCHEMES[key].label;
+        if(key === group.schemeKey) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener('change', ()=>{
+        const newKey = select.value;
+        const scheme = NAME_SCHEMES[newKey];
+        group.schemeKey = newKey;
+        group.groupLabel = scheme ? scheme.label : '不命名 / 手动';
+
+        if(scheme && scheme.names.length > 0){
+          group.items.forEach((img, idx)=>{
+            const name = scheme.names[idx % scheme.names.length];
+            img.assignedName = name;
+            img.assignedExt = '.png';
+          });
+        } else {
+          group.items.forEach(img=>{
+            img.assignedName = null;
+            img.assignedExt = null;
+          });
+        }
+
+        group.items = sortPairItems(group.items, newKey);
+
+        renderAll();
+        updateStatus();
+        updateButtons();
+        log(`✅ 组 ${group.w}×${group.h} 已切换 → ${scheme ? scheme.label : '不命名'}`);
+      });
+
+      head.appendChild(select);
+      block.appendChild(head);
+
+      const inner = document.createElement('div');
+      inner.className = 'group-inner';
+      group.items.forEach(img=>{
+        inner.appendChild(makePreviewItem(img));
+      });
+      block.appendChild(inner);
+      previewArea.appendChild(block);
+    });
+  }
+
+  function makePreviewItem(img){
+    const div = document.createElement('div');
+    div.className = 'preview-item' + (img.id === selectedId ? ' selected' : '');
+    div.dataset.id = img.id;
+
+    const nameText = img.assignedName
+      ? (img.assignedName + (img.assignedExt||''))
+      : '未命名';
+    const badgeClass = img.assignedName ? 'assigned' : 'none';
+    const isDark = isDarkName(img.assignedName || '');
+    const isGen = !!img.isGenerated;
+    const isTrimmed = !!img.trimmed;
+
+    div.innerHTML = `
+      ${isDark ? '<div class="dark-mark">Dark</div>' : ''}
+      ${isGen ? '<div class="gen-mark">复制</div>' : ''}
+      ${isTrimmed ? '<div class="trim-mark">已裁剪</div>' : ''}
+      <div class="img-wrap"><img src="${img.previewUrl}" alt=""></div>
+      <div class="preview-dim">${img.width} × ${img.height}</div>
+      <div class="preview-orig" title="${img.name}">原: ${img.name.length>20?img.name.slice(0,18)+'…':img.name}</div>
+      <div class="badge ${badgeClass}">${nameText}</div>
+    `;
+    div.addEventListener('click', function(e){
+      e.stopPropagation();
+      onImageClick(img.id);
+    });
+    return div;
+  }
+
+  function onImageClick(id){
+    if(selectedId === null){
+      selectedId = id;
+      const img = images.find(i=>i.id===id);
+      swapHint.classList.add('on');
+      swapHint.textContent = `已选中「${img.assignedName || '未命名'}」，请点击另一张互换`;
+      renderAll();
+      return;
+    }
+    if(selectedId === id){
+      selectedId = null;
+      swapHint.classList.remove('on');
+      renderAll();
+      return;
+    }
+    const a = images.find(i=>i.id===selectedId);
+    const b = images.find(i=>i.id===id);
+    if(!a || !b) return;
+
+    const tmpName = a.assignedName;
+    const tmpExt = a.assignedExt;
+    a.assignedName = b.assignedName;
+    a.assignedExt = b.assignedExt;
+    b.assignedName = tmpName;
+    b.assignedExt = tmpExt;
+
+    selectedId = null;
+    swapHint.classList.remove('on');
+
+    buildDisplayGroups();
+
+    renderAll();
+    updateStatus();
+    updateButtons();
+    log(`🔄 互换: 「${a.name}」⇄「${b.name}」`);
+  }
+
+  async function addImageFiles(preprocessed){
+    let added = 0;
+    for(const item of preprocessed){
+      try{
+        const {width,height,url} = await getImageSize(item.file);
+        const imgObj = {
+          id: uid(), file: item.file, name: item.file.name, width, height,
+          previewUrl: url,
+          assignedName: item.assignedName || null,
+          assignedExt: item.assignedExt || null,
+          isGenerated: !!item.isGenerated,
+          trimmed: !!item.trimmed,
+          originalWidth: item.originalWidth || 0,
+          originalHeight: item.originalHeight || 0
+        };
+        images.push(imgObj);
+        added++;
+        await new Promise(r=>setTimeout(r,0));
+      }catch(e){
+        log(`加载失败: ${item.file.name}`,true);
+      }
+    }
+    return added;
+  }
+
+  async function handleImages(files){
+    if(isProcessing) return;
+    isProcessing = true;
+    updateButtons();
+    const list = Array.from(files).filter(f=>f.type.startsWith('image/'));
+    if(!list.length){
+      log('没有有效图片',true);
+      isProcessing = false;
+      updateButtons();
+      return;
+    }
+    if(emptyTip) emptyTip.style.display = 'none';
+    log(`开始处理 ${list.length} 张图片…`);
+
+    try{
+      progressEl.classList.add('on');
+      progressEl.textContent = `透明底检查 0 / ${list.length}`;
+      const trimmedEntries = await trimBatch(list, (cur, total)=>{
+        progressEl.textContent = `透明底检查 ${cur} / ${total}`;
+      });
+      progressEl.textContent = '正在命名…';
+
+      const preprocessed = await preprocessFiles(trimmedEntries);
+      await addImageFiles(preprocessed);
+
+      autoNameAll();
+      buildDisplayGroups();
+      renderAll();
+      updateStatus();
+      updateButtons();
+      log(`✅ 处理完成，共 ${images.length} 张`);
+    }catch(e){
+      log(`处理出错: ${e.message}`, true);
+    }
+
+    progressEl.classList.remove('on');
+    isProcessing = false;
+    updateButtons();
+  }
+
+  async function handleZip(file){
+    if(isProcessing) return;
+    if(!file) return;
+    if(!/\.zip$/i.test(file.name) && file.type !== 'application/zip'){
+      log('请选择 .zip 文件', true);
+      return;
+    }
+    isProcessing = true;
+    updateButtons();
+    progressEl.classList.add('on');
+    progressEl.textContent = '正在读取 ZIP…';
+    if(emptyTip) emptyTip.style.display = 'none';
+
+    try{
+      const arrayBuffer = await file.arrayBuffer();
+      const zip = await JSZip.loadAsync(arrayBuffer);
+
+      const imageEntries = [];
+      zip.forEach((relativePath, zipEntry)=>{
+        if(zipEntry.dir) return;
+        if(isImageFile(zipEntry.name)) imageEntries.push(zipEntry);
+      });
+
+      if(imageEntries.length === 0){
+        log('ZIP 里没有找到图片文件', true);
+        progressEl.classList.remove('on');
+        isProcessing = false;
+        updateButtons();
+        return;
+      }
+
+      log(`ZIP 里发现 ${imageEntries.length} 张图片，开始解压…`);
+      progressEl.textContent = `解压 0 / ${imageEntries.length}`;
+
+      const fileList = [];
+      let done = 0;
+      for(const entry of imageEntries){
+        try{
+          const blob = await entry.async('blob');
+          const fileName = entry.name.split('/').pop();
+          const f = new File([blob], fileName, { type: blob.type || 'image/png' });
+          fileList.push(f);
+        }catch(e){
+          log(`解压失败: ${entry.name}`, true);
+        }
+        done++;
+        progressEl.textContent = `解压 ${done} / ${imageEntries.length}`;
+        await new Promise(r=>setTimeout(r,0));
+      }
+
+      progressEl.textContent = `透明底检查 0 / ${fileList.length}`;
+      const trimmedEntries = await trimBatch(fileList, (cur, total)=>{
+        progressEl.textContent = `透明底检查 ${cur} / ${total}`;
+      });
+      progressEl.textContent = '正在命名…';
+
+      const preprocessed = await preprocessFiles(trimmedEntries);
+      await addImageFiles(preprocessed);
+
+      log(`✅ ZIP 解压完成，共导入 ${images.length} 张`);
+    }catch(e){
+      log(`ZIP 解析失败: ${e.message}`, true);
+    }
+
+    progressEl.classList.remove('on');
+    isProcessing = false;
+    autoNameAll();
+    buildDisplayGroups();
+    renderAll();
+    updateStatus();
+    updateButtons();
+  }
+
+  function updateStatus(){
+    counterEl.textContent = `已上传 ${images.length} 张 · ${groups.length} 组`;
+    const assigned = images.filter(img=>img.assignedName).length;
+    assignInfoEl.textContent = `已命名 ${assigned} / ${images.length} 张`;
+  }
+  function updateButtons(){
+    const hasImages = images.length > 0;
+    clearBtn.disabled = !hasImages || isProcessing;
+    const allAssigned = images.length > 0 && images.every(img=>img.assignedName && img.assignedExt);
+    downloadBtn.disabled = !(hasImages && allAssigned && !isProcessing);
+  }
+
+  function resetAll(){
+    images.forEach(img=>{ if(img.previewUrl) URL.revokeObjectURL(img.previewUrl); });
+    images = [];
+    groups = [];
+    selectedId = null;
+    previewArea.innerHTML = '<div class="empty-tip" id="emptyTip">还没有上传图片</div>';
+    fileInput.value = '';
+    clearLog();
+    swapHint.classList.remove('on');
+    progressEl.classList.remove('on');
+    updateStatus();
+    updateButtons();
+    transferDarkStatus.textContent = '未上传';
+    transferDarkStatus.className = 'mini-status';
+    transferDarkInput.value = '';
+    darkThumbsEl.innerHTML = '';
+    zipNameInput.value = '昀昀盒子';
+  }
+
+  async function downloadZip(){
+    if(isProcessing) return;
+    if(images.length === 0){ log('请先上传图片',true); return; }
+    const unnamed = images.filter(img=>!img.assignedName || !img.assignedExt);
+    if(unnamed.length > 0){
+      log(`还有 ${unnamed.length} 张未命名。请调整方案或手动互换`,true);
+      return;
+    }
+
+    let zipBase = (zipNameInput.value || '').trim() || '昀昀盒子';
+    zipBase = zipBase.replace(/[\\/:*?"<>|]/g, '_');
+
+    isProcessing = true;
+    updateButtons();
+    log('开始打包…');
+
+    const zip = new JSZip();
+    let count = 0;
+
+    for(const img of images){
+      const ext = normalizeExt(img.assignedExt);
+      let finalName = img.assignedName + ext;
+      let c = 1;
+      while(zip.file(finalName)){
+        finalName = img.assignedName + `_${c}` + ext;
+        c++;
+      }
+      try{
+        const buf = await img.file.arrayBuffer();
+        zip.file(finalName, buf);
+        count++;
+        log(`  ✓ ${img.name} → ${finalName}`);
+      }catch(e){ log(`读取失败: ${img.name}`,true); }
+    }
+
+    if(count === 0){ log('没有图片加入压缩包',true); isProcessing=false; updateButtons(); return; }
+
+    try{
+      const blob = await zip.generateAsync({type:'blob'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${zipBase}.zip`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),4000);
+      log(`✅ 打包完成，共 ${count} 张，文件名 ${zipBase}.zip，已开始下载`);
+    }catch(e){ log(`打包失败: ${e.message}`,true); }
+
+    isProcessing = false;
+    updateButtons();
+  }
+
+  async function handleTransferDark(file){
+    if(!file) return;
+    try{
+      let srcFile = file;
+      let trimmedFlag = false;
+      let origW = 0, origH = 0;
+      const trimRes = await trimTransparent(file);
+      if(trimRes && trimRes.cropped){
+        log(`✂️ 夜间模式图透明底裁剪：${trimRes.originalWidth}×${trimRes.originalHeight} → ${trimRes.width}×${trimRes.height} (PNG)`);
+        srcFile = trimRes.file;
+        trimmedFlag = true;
+        origW = trimRes.originalWidth;
+        origH = trimRes.originalHeight;
+      }
+
+      const {width,height,url} = await getImageSize(srcFile);
+      transferDarkStatus.textContent = `✅ ${width}×${height}，生成 2 张`;
+      transferDarkStatus.className = 'mini-status';
+
+      const NAMES = ['ChatRoom_Bubble_Text_Receiver_Dark_HL','ChatRoom_Bubble_Text_Receiver_Dark'];
+      for(let i = 0; i < NAMES.length; i++){
+        const newFile = new File([srcFile], NAMES[i] + '.png', { type: 'image/png' });
+        await addImageFiles([{
+          file: newFile,
+          assignedName: NAMES[i],
+          assignedExt: '.png',
+          isGenerated: true,
+          trimmed: trimmedFlag,
+          originalWidth: origW,
+          originalHeight: origH
+        }]);
+      }
+
+      darkThumbsEl.innerHTML = '';
+      for(const name of NAMES){
+        const thumb = document.createElement('div');
+        thumb.className = 'dark-thumb';
+        thumb.innerHTML = `
+          <img src="${url}" alt="">
+          <div class="n">${name}.png</div>
+        `;
+        darkThumbsEl.appendChild(thumb);
+      }
+
+      log(`✅ 夜间模式已复制成 2 张并命名`);
+      buildDisplayGroups();
+      renderAll();
+      updateStatus();
+      updateButtons();
+    }catch(e){
+      log(`夜间模式处理失败: ${e.message}`, true);
+      transferDarkStatus.textContent = '❌ 处理失败';
+      transferDarkStatus.className = 'mini-status err';
+    }
+  }
+
+  uploadArea.addEventListener('click', e=>{ if(e.target.tagName!=='INPUT') fileInput.click(); });
+  fileInput.addEventListener('change', e=>{
+    const files = Array.from(e.target.files || []);
+    if(files.length){
+      const zipFile = files.find(f=>/\.zip$/i.test(f.name));
+      if(zipFile) handleZip(zipFile);
+      else handleImages(files);
+    }
+    fileInput.value='';
+  });
+
+  uploadArea.addEventListener('dragover', e=>{ e.preventDefault(); uploadArea.style.borderColor='var(--blue)'; });
+  uploadArea.addEventListener('dragleave', ()=>{ uploadArea.style.borderColor='var(--upload-border)'; });
+  uploadArea.addEventListener('drop', e=>{
+    e.preventDefault(); uploadArea.style.borderColor='var(--upload-border)';
+    if(e.dataTransfer.files.length){
+      const list = Array.from(e.dataTransfer.files);
+      const zip = list.find(f=>/\.zip$/i.test(f.name));
+      if(zip) handleZip(zip);
+      else handleImages(list);
+    }
+  });
+
+  transferDarkInput.addEventListener('change', e=>{
+    if(e.target.files.length) handleTransferDark(e.target.files[0]);
+    transferDarkInput.value = '';
+  });
+
+  clearBtn.addEventListener('click', resetAll);
+  downloadBtn.addEventListener('click', downloadZip);
+
+  resetAll();
+})();
+</script>
+</body>
+</html>
