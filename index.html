@@ -83,6 +83,7 @@
   .preview-item .dark-mark{position:absolute;top:5px;right:5px;font-size:.5rem;padding:2px 5px;border-radius:8px;background:var(--dark-mark);color:var(--card);font-weight:600;pointer-events:none}
   .preview-item .gen-mark{position:absolute;top:5px;left:5px;font-size:.5rem;padding:2px 5px;border-radius:8px;background:var(--purple);color:#fff;font-weight:600;pointer-events:none}
   .preview-item .trim-mark{position:absolute;bottom:5px;left:5px;font-size:.5rem;padding:2px 5px;border-radius:8px;background:#0891b2;color:#fff;font-weight:600;pointer-events:none}
+  .preview-item .keep-mark{position:absolute;bottom:5px;left:5px;font-size:.5rem;padding:2px 5px;border-radius:8px;background:#65a30d;color:#fff;font-weight:600;pointer-events:none}
 
   .status{display:flex;justify-content:space-between;background:var(--status-bg);padding:8px 12px;border-radius:40px;font-size:.68rem;color:var(--text-sub);margin-top:10px}
   .log{margin-top:12px;background:#0f172a;color:#e2e8f0;padding:10px;border-radius:12px;font-size:.65rem;font-family:monospace;max-height:100px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.5}
@@ -165,7 +166,7 @@
   <button class="btn btn-green" id="downloadBtn" disabled>📦 打包下载重命名图片</button>
 
   <div class="log" id="log"></div>
-  <div class="hint">💡 781×271 自动复制成 10 张，171×121 自动 2 张，850×125 自动 4 张（input_text_bg / input_voice_bg / _Dark），夜间模式 2 张。其他相近尺寸并排一组。带透明底的图片会自动裁掉全透明边，输出保持 PNG 透明底。</div>
+  <div class="hint">💡 781×271 自动复制成 10 张，171×121 自动 2 张，850×125 自动 4 张（input_text_bg / input_voice_bg / _Dark），夜间模式 2 张。**171×121、781×271、850×125 这三种尺寸不裁剪透明底，保留原尺寸**。tabbar_bg / topbar_bg / input_bg / default_bg / chat_bg 都按名字两两一组，不会因为尺寸相近被合并。</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -205,7 +206,6 @@
     },
     'bubble2': { label: '气泡 2 张（171×121）', names: ['ChatRoom_Bubble_Text_Sender_Green','ChatRoom_Bubble_Text_Receiver_White'] },
     'night2': { label: '夜间 2 张', names: ['ChatRoom_Bubble_Text_Receiver_Dark_HL','ChatRoom_Bubble_Text_Receiver_Dark'] },
-    // ⭐ 新增：850×125 输入框 4 张
     'input_bg_voice_4': {
       label: '输入框 4 张（850×125）',
       names: ['input_text_bg','input_voice_bg','input_text_bg_Dark','input_voice_bg_Dark']
@@ -216,7 +216,7 @@
   const SIZE_TO_SCHEME = [
     { w: 781,  h: 271,  key: 'transfer10' },
     { w: 171,  h: 121,  key: 'bubble2' },
-    { w: 850,  h: 125,  key: 'input_bg_voice_4' },  // ⭐ 新增
+    { w: 850,  h: 125,  key: 'input_bg_voice_4' },
     { w: 1178, h: 241,  key: 'input_bg_pair' },
     { w: 1178, h: 242,  key: 'input_bg_pair' },
     { w: 1178, h: 254,  key: 'tabbar_bg_pair' },
@@ -224,6 +224,13 @@
     { w: 1179, h: 292,  key: 'topbar_bg_pair' },
     { w: 1179, h: 263,  key: 'topbar_bg_pair' },
     { w: 1179, h: 2556, key: 'default_chat' }
+  ];
+
+  // ⭐ 不裁剪白名单：保留原尺寸
+  const NO_TRIM_SIZES = [
+    { w: 171, h: 121 },   // 气泡 2 张
+    { w: 781, h: 271 },   // 转账 10 张
+    { w: 850, h: 125 }    // 输入框 4 张
   ];
 
   const TOLERANCE = 3;
@@ -252,6 +259,16 @@
   function isDarkName(name){ return /_Dark$/i.test(name); }
   function isImageFile(name){ return /\.(jpe?g|png|webp|bmp|gif|tiff?)$/i.test(name); }
 
+  function shouldSkipTrim(w, h){
+    for(const s of NO_TRIM_SIZES){
+      if(Math.abs(w - s.w) <= TOLERANCE && Math.abs(h - s.h) <= TOLERANCE){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // 排序：亮图在前，暗图在后
   function sortPairItems(items, schemeKey){
     if(schemeKey === 'bubble2'){
       const order = ['ChatRoom_Bubble_Text_Sender_Green','ChatRoom_Bubble_Text_Receiver_White'];
@@ -269,7 +286,6 @@
         return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
       });
     }
-    // ⭐ 输入框 4 张：按 亮(原图) → 亮(复制) → 暗(原图) → 暗(复制) 排列
     if(schemeKey === 'input_bg_voice_4'){
       const order = ['input_text_bg','input_voice_bg','input_text_bg_Dark','input_voice_bg_Dark'];
       return [...items].sort((a,b)=>{
@@ -278,6 +294,7 @@
         return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
       });
     }
+    // 成对：亮在前，暗在后
     return [...items].sort((a,b)=>{
       const aName = a.assignedName || '';
       const bName = b.assignedName || '';
@@ -408,11 +425,28 @@
     });
   }
 
+  // ⭐ 批量裁剪：命中白名单 → 跳过裁剪
   async function trimBatch(files, onProgress){
     const result = [];
     for(let i = 0; i < files.length; i++){
       const f = files[i];
       if(onProgress) onProgress(i + 1, files.length, f.name);
+
+      let skipTrim = false;
+      try{
+        const {width, height} = await getImageSize(f);
+        if(shouldSkipTrim(width, height)){
+          skipTrim = true;
+          log(`⏭️ ${f.name} (${width}×${height}) 保留原尺寸，跳过透明底裁剪`);
+        }
+      }catch(e){}
+
+      if(skipTrim){
+        result.push({ file: f, trimmed: false, kept: true });
+        await new Promise(r=>setTimeout(r, 0));
+        continue;
+      }
+
       try{
         const res = await trimTransparent(f);
         if(res && res.cropped){
@@ -443,62 +477,53 @@
     return 'none';
   }
 
-  // ⭐ 判断是否为暗色：文件名含 _Dark / dark / _dark
   function guessIsDark(fileName){
-    return /(_dark|_Dark|dark_|-dark)/i.test(fileName) || /_Dark\.[a-z]+$/i.test(fileName);
+    return /(_dark|_Dark|dark_|-dark)/i.test(fileName);
   }
 
   async function preprocessFiles(fileEntries){
     const result = [];
 
-    // ⭐ 先收集 850×125 的图片，成对处理（第 1 张当亮，第 2 张当暗）
-    // 但为了保持通用性，仍按原顺序遍历，遇到 850×125 时按顺序配对
-    // 由于需要成对，这里先预处理一遍，找出所有 850×125 的条目
     const entriesWithSize = [];
     for(const entry of fileEntries){
       const file = entry.file || entry;
       try{
         const {width, height} = await getImageSize(file);
-        entriesWithSize.push({ entry, file, width, height, trimmed: !!entry.trimmed, originalWidth: entry.originalWidth||0, originalHeight: entry.originalHeight||0 });
+        entriesWithSize.push({
+          entry, file, width, height,
+          trimmed: !!entry.trimmed,
+          kept: !!entry.kept,
+          originalWidth: entry.originalWidth||0,
+          originalHeight: entry.originalHeight||0
+        });
       }catch(e){
         log(`处理失败: ${file.name}`, true);
       }
       await new Promise(r=>setTimeout(r,0));
     }
 
-    // 找出所有 850×125 的条目
+    // 850×125 处理：每 2 张一组
     const inputBgEntries = entriesWithSize.filter(e => schemeKeyBySize(e.width, e.height) === 'input_bg_voice_4');
-    // 亮暗配对：优先按文件名判断，否则按顺序
-    // 把带 _Dark/dark 的排到后面
     const sortedInputBg = [...inputBgEntries].sort((a,b)=>{
       const aDark = guessIsDark(a.file.name) ? 1 : 0;
       const bDark = guessIsDark(b.file.name) ? 1 : 0;
       return aDark - bDark;
     });
 
-    // 分组：每 2 张为一组（亮+暗）
     const inputBgPairs = [];
     for(let i = 0; i < sortedInputBg.length; i += 2){
-      const pair = sortedInputBg.slice(i, i + 2);
-      if(pair.length === 2) inputBgPairs.push(pair);
-      else if(pair.length === 1){
-        // 只有亮色，暗色缺失 → 复制暗色？这里保守：只处理亮色
-        inputBgPairs.push(pair);
-      }
+      inputBgPairs.push(sortedInputBg.slice(i, i + 2));
     }
 
-    // 标记哪些条目已由 850×125 逻辑处理
     const handledInputBg = new Set();
     inputBgPairs.forEach(pair=>{
       pair.forEach(e => handledInputBg.add(e.file));
     });
 
-    // 生成 850×125 的 4 张命名结果
     for(const pair of inputBgPairs){
       const lightE = pair[0];
       const darkE = pair[1];
 
-      // 亮图：原图 → input_text_bg，复制 → input_voice_bg
       if(lightE){
         const lightNames = ['input_text_bg','input_voice_bg'];
         for(const name of lightNames){
@@ -507,8 +532,9 @@
             file: newFile,
             assignedName: name,
             assignedExt: '.png',
-            isGenerated: (name !== 'input_text_bg'), // 复制标记：input_voice_bg 是复制
+            isGenerated: (name !== 'input_text_bg'),
             trimmed: lightE.trimmed,
+            kept: lightE.kept,
             originalWidth: lightE.originalWidth,
             originalHeight: lightE.originalHeight
           });
@@ -516,7 +542,6 @@
         log(`  🔁 ${lightE.file.name} (${lightE.width}×${lightE.height}) → input_text_bg + input_voice_bg`);
       }
 
-      // 暗图：原图 → input_text_bg_Dark，复制 → input_voice_bg_Dark
       if(darkE){
         const darkNames = ['input_text_bg_Dark','input_voice_bg_Dark'];
         for(const name of darkNames){
@@ -527,6 +552,7 @@
             assignedExt: '.png',
             isGenerated: (name !== 'input_text_bg_Dark'),
             trimmed: darkE.trimmed,
+            kept: darkE.kept,
             originalWidth: darkE.originalWidth,
             originalHeight: darkE.originalHeight
           });
@@ -535,10 +561,9 @@
       }
     }
 
-    // 处理其它尺寸的条目（跳过已处理的 850×125）
     for(const e of entriesWithSize){
       if(handledInputBg.has(e.file)) continue;
-      const { file, width, height, trimmed, originalWidth, originalHeight } = e;
+      const { file, width, height, trimmed, kept, originalWidth, originalHeight } = e;
       const key = schemeKeyBySize(width, height);
 
       try{
@@ -552,7 +577,8 @@
               assignedName: NAMES[i],
               assignedExt: '.png',
               isGenerated: true,
-              trimmed: false
+              trimmed: false,
+              kept: true
             });
           }
           continue;
@@ -564,6 +590,7 @@
           assignedExt: null,
           isGenerated: false,
           trimmed,
+          kept,
           originalWidth,
           originalHeight
         });
@@ -575,9 +602,17 @@
     return result;
   }
 
+  // ⭐ 只对未命名的图做自动命名；已命名的跳过
   function autoNameAll(){
+    const named = images.filter(im => im.assignedName);
+    const unnamed = images.filter(im => !im.assignedName);
+
+    named.forEach(im=>{
+      if(!im.assignedExt) im.assignedExt = '.png';
+    });
+
     const sizeMap = new Map();
-    images.forEach(img=>{
+    unnamed.forEach(img=>{
       const key = `${img.width}x${img.height}`;
       if(!sizeMap.has(key)) sizeMap.set(key, []);
       sizeMap.get(key).push(img);
@@ -589,8 +624,7 @@
 
       if(schemeKey === 'default_chat'){
         const names = ['default_bg','default_bg_Dark','chat_bg','chat_bg_Dark'];
-        const unassigned = list.filter(im=>!im.assignedName);
-        unassigned.forEach((img, idx)=>{
+        list.forEach((img, idx)=>{
           if(idx < names.length){
             img.assignedName = names[idx];
             img.assignedExt = '.png';
@@ -601,8 +635,7 @@
 
       if(schemeKey === 'bubble2'){
         const names = NAME_SCHEMES.bubble2.names;
-        const unassigned = list.filter(im=>!im.assignedName);
-        unassigned.forEach((img, idx)=>{
+        list.forEach((img, idx)=>{
           if(idx < names.length){
             img.assignedName = names[idx];
             img.assignedExt = '.png';
@@ -611,11 +644,9 @@
         return;
       }
 
-      // ⭐ 850×125 已在上一步由 preprocessFiles 直接命名，这里只兜底未命名的
       if(schemeKey === 'input_bg_voice_4'){
         const names = NAME_SCHEMES.input_bg_voice_4.names;
-        const unassigned = list.filter(im=>!im.assignedName);
-        unassigned.forEach((img, idx)=>{
+        list.forEach((img, idx)=>{
           if(idx < names.length){
             img.assignedName = names[idx];
             img.assignedExt = '.png';
@@ -628,11 +659,9 @@
 
       const scheme = NAME_SCHEMES[schemeKey];
       if(!scheme || scheme.names.length === 0){
-        list.forEach(img=>{ if(!img.assignedName){ img.assignedName = null; img.assignedExt = null; } });
         return;
       }
-      const unassigned = list.filter(im=>!im.assignedName);
-      unassigned.forEach((img, idx)=>{
+      list.forEach((img, idx)=>{
         const name = scheme.names[idx % scheme.names.length];
         img.assignedName = name;
         img.assignedExt = '.png';
@@ -640,10 +669,12 @@
     });
   }
 
+  // ⭐ 按名字精确分组，避免 tabbar/topbar 因为尺寸相近被合并
   function buildDisplayGroups(){
     groups = [];
     const handled = new Set();
 
+    // 气泡 2 张
     const bubbleGreen = images.find(im=>im.assignedName === 'ChatRoom_Bubble_Text_Sender_Green');
     const bubbleWhite = images.find(im=>im.assignedName === 'ChatRoom_Bubble_Text_Receiver_White');
     if(bubbleGreen || bubbleWhite){
@@ -658,6 +689,7 @@
       items.forEach(x=>handled.add(x.id));
     }
 
+    // 夜间 2 张
     const darkHL = images.find(im=>im.assignedName === 'ChatRoom_Bubble_Text_Receiver_Dark_HL');
     const dark = images.find(im=>im.assignedName === 'ChatRoom_Bubble_Text_Receiver_Dark');
     if(darkHL || dark){
@@ -672,7 +704,7 @@
       items.forEach(x=>handled.add(x.id));
     }
 
-    // ⭐ 850×125 输入框 4 张一组
+    // 输入框 4 张
     const inputBgItems = images.filter(im =>
       im.assignedName === 'input_text_bg' ||
       im.assignedName === 'input_voice_bg' ||
@@ -688,26 +720,29 @@
       inputBgItems.forEach(x=>handled.add(x.id));
     }
 
-    const defaultItems = images.filter(im=>im.assignedName === 'default_bg' || im.assignedName === 'default_bg_Dark');
-    if(defaultItems.length > 0){
-      groups.push({
-        id: uid(), w: 1179, h: 2556, schemeKey: 'default_bg_pair',
-        groupLabel: 'default_bg ⇄ default_bg_Dark',
-        items: sortPairItems(defaultItems, 'default_bg_pair')
-      });
-      defaultItems.forEach(x=>handled.add(x.id));
-    }
+    // ⭐ 按名字精确分组的成对方案
+    const PAIR_GROUPS = [
+      { key: 'input_bg_pair',   names: ['input_bg','input_bg_Dark'],           label: 'input_bg ⇄ input_bg_Dark',     w: 1178, h: 242 },
+      { key: 'tabbar_bg_pair',  names: ['tabbar_bg','tabbar_bg_Dark'],         label: 'tabbar_bg ⇄ tabbar_bg_Dark',   w: 1178, h: 255 },
+      { key: 'topbar_bg_pair',  names: ['topbar_bg','topbar_bg_Dark'],         label: 'topbar_bg ⇄ topbar_bg_Dark',   w: 1179, h: 292 },
+      { key: 'default_bg_pair', names: ['default_bg','default_bg_Dark'],       label: 'default_bg ⇄ default_bg_Dark', w: 1179, h: 2556 },
+      { key: 'chat_bg_pair',    names: ['chat_bg','chat_bg_Dark'],             label: 'chat_bg ⇄ chat_bg_Dark',       w: 1179, h: 2556 }
+    ];
 
-    const chatItems = images.filter(im=>im.assignedName === 'chat_bg' || im.assignedName === 'chat_bg_Dark');
-    if(chatItems.length > 0){
+    PAIR_GROUPS.forEach(pg=>{
+      const items = images.filter(im => pg.names.includes(im.assignedName));
+      if(items.length === 0) return;
       groups.push({
-        id: uid(), w: 1179, h: 2556, schemeKey: 'chat_bg_pair',
-        groupLabel: 'chat_bg ⇄ chat_bg_Dark',
-        items: sortPairItems(chatItems, 'chat_bg_pair')
+        id: uid(),
+        w: pg.w, h: pg.h,
+        schemeKey: pg.key,
+        groupLabel: pg.label,
+        items: sortPairItems(items, pg.key)
       });
-      chatItems.forEach(x=>handled.add(x.id));
-    }
+      items.forEach(x=>handled.add(x.id));
+    });
 
+    // 剩余的图按尺寸自动分组
     const rest = images.filter(im=>!handled.has(im.id));
     const sizeGroups = [];
     const sorted = [...rest].sort((a,b)=> a.width*a.height - b.width*b.height);
@@ -836,11 +871,13 @@
     const isDark = isDarkName(img.assignedName || '');
     const isGen = !!img.isGenerated;
     const isTrimmed = !!img.trimmed;
+    const isKept = !!img.kept;
 
     div.innerHTML = `
       ${isDark ? '<div class="dark-mark">Dark</div>' : ''}
       ${isGen ? '<div class="gen-mark">复制</div>' : ''}
       ${isTrimmed ? '<div class="trim-mark">已裁剪</div>' : ''}
+      ${isKept ? '<div class="keep-mark">原尺寸</div>' : ''}
       <div class="img-wrap"><img src="${img.previewUrl}" alt=""></div>
       <div class="preview-dim">${img.width} × ${img.height}</div>
       <div class="preview-orig" title="${img.name}">原: ${img.name.length>20?img.name.slice(0,18)+'…':img.name}</div>
@@ -902,6 +939,7 @@
           assignedExt: item.assignedExt || null,
           isGenerated: !!item.isGenerated,
           trimmed: !!item.trimmed,
+          kept: !!item.kept,
           originalWidth: item.originalWidth || 0,
           originalHeight: item.originalHeight || 0
         };
